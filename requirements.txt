@@ -1,0 +1,7 @@
+# requirements.txt
+pandas
+numpy
+scikit-learn
+flask
+joblib
+imbalanced-learn
