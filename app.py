@@ -2,8 +2,8 @@ import streamlit as st
 import joblib
 import numpy as np
 
-MODEL_FILE = 'ai_diagnosa_pipeline.pkl'
-LABEL_ENCODER_FILE = 'label_encoder.pkl'
+MODEL_PATH = 'model_assets/ai_diagnosa_pipeline.pkl'
+LABEL_ENCODER_PATH = 'model_assets/label_encoder.pkl'
 
 @st.cache_resource
 def load_assets():
@@ -72,3 +72,4 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
