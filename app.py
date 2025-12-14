@@ -1,22 +1,22 @@
 import streamlit as st
 import joblib
 import numpy as np
-
 MODEL_PATH = 'ai_diagnosa_pipeline.pkl'
 LABEL_ENCODER_PATH = 'label_encoder.pkl'
 
 @st.cache_resource
 def load_assets():
-    """Memuat pipeline model dan label encoder dengan caching."""
+    """Memuat pipeline model dan label encoder dari root directory."""
     model_pipeline = None
     label_encoder = None
     
     try:
-        model_pipeline = joblib.load(MODEL_FILE)
-        label_encoder = joblib.load(LABEL_ENCODER_FILE)
+        model_pipeline = joblib.load(MODEL_PATH)
+        label_encoder = joblib.load(LABEL_ENCODER_PATH)
         st.success("Aset model (Pipeline dan Encoder) berhasil dimuat.")
     except Exception as e:
-        st.error(f"Error memuat aset model: {e}. Pastikan file {MODEL_FILE} dan {LABEL_ENCODER_FILE} ada di root directory GitHub.")
+        st.error(f"FATAL ERROR: Gagal memuat aset model. Pastikan file {MODEL_PATH} dan {LABEL_ENCODER_PATH} ada di FOLDER UTAMA repositori GitHub Anda.")
+        st.code(f"Error detail: {e}")
         
     return model_pipeline, label_encoder
 
@@ -42,19 +42,18 @@ def main():
     # Tombol Prediksi
     if st.button("Lakukan Prediksi Diagnosis"):
         
-        # Validasi Input
         if not input_text.strip():
             st.warning("Mohon masukkan teks ciri-ciri kasus.")
             return
 
         if model_pipeline is None or label_encoder is None:
-            st.error("Model gagal dimuat. Tidak dapat melakukan prediksi.")
+            # Error ditangani di fungsi load_assets
             return
 
         try:
             with st.spinner('Model sedang memproses...'):
                 # Core Prediction Logic
-                # Model Pipeline menerima list of text
+                # Menggunakan .predict pada pipeline (yang sudah termasuk TF-IDF dan Classifier)
                 prediction_encoded = model_pipeline.predict([input_text])[0] 
                 
                 # Inverse Transform untuk mendapatkan nama diagnosis
@@ -64,7 +63,7 @@ def main():
             st.success(f"Diagnosis yang Diprediksi: **{predicted_diagnosis}**")
             
             st.markdown("---")
-            st.info("Prediksi ini dihasilkan oleh model machine learning dan harus dikonfirmasi oleh profesional yang kompeten.")
+            st.info("Prediksi ini adalah output Machine Learning dan harus dikonfirmasi oleh profesional yang kompeten.")
 
         except Exception as e:
             st.error(f"Gagal saat prediksi. Pastikan format input benar. Error: {e}")
@@ -72,5 +71,3 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
-
-
