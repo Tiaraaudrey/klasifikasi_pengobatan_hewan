@@ -1,9 +1,10 @@
 import streamlit as st
 import joblib
 import numpy as np
-import pandas as pd # <--- BARIS BARU: Import Pandas untuk input yang benar
+import pandas as pd # Wajib untuk membuat DataFrame input
 
 # --- 1. KONFIGURASI FILE MODEL (Jalur Diperbaiki ke Root) ---
+# Pastikan file-file ini berada di FOLDER UTAMA (ROOT) GitHub Anda
 MODEL_PATH = 'ai_diagnosa_pipeline.pkl'
 LABEL_ENCODER_PATH = 'label_encoder.pkl'
 
@@ -55,16 +56,16 @@ def main():
             return
 
         try:
+            # Perhatikan spasi (indentation) di bawah baris 'with'
             with st.spinner('Model sedang memproses...'):
-            
-            # --- PERBAIKAN KRITIS DI SINI ---
-            # Model membutuhkan input DataFrame 2D dengan nama kolom yang sesuai.
-            input_df = pd.DataFrame({'ciri_kasus': [input_text]})
-            
-            prediction_encoded = model_pipeline.predict(input_df)[0] # <-- Menggunakan input_df
-            
-            # Inverse Transform untuk mendapatkan nama diagnosis
-            predicted_diagnosis = label_encoder.inverse_transform([prediction_encoded])[0]
+                # 1. Konversi input ke DataFrame dengan nama kolom yang benar (ciri_kasus)
+                input_df = pd.DataFrame({'ciri_kasus': [input_text]})
+                
+                # 2. Prediksi
+                prediction_encoded = model_pipeline.predict(input_df)[0] 
+                
+                # 3. Inverse Transform
+                predicted_diagnosis = label_encoder.inverse_transform([prediction_encoded])[0]
 
             st.header("Hasil Prediksi")
             st.success(f"Diagnosis yang Diprediksi: **{predicted_diagnosis}**")
@@ -73,8 +74,7 @@ def main():
             st.info("Prediksi ini adalah output Machine Learning dan harus dikonfirmasi oleh profesional yang kompeten.")
 
         except Exception as e:
-            st.error(f"Gagal saat prediksi. Pastikan format input benar.")
-            # Tambahkan detail error untuk debugging lebih lanjut jika diperlukan
+            st.error(f"Gagal saat prediksi.")
             st.code(f"Error detail: {e}") 
 
 # Jalankan Aplikasi
