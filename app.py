@@ -1,9 +1,13 @@
 import streamlit as st
 import joblib
 import numpy as np
+import pandas as pd # <--- BARIS BARU: Import Pandas untuk input yang benar
+
+# --- 1. KONFIGURASI FILE MODEL (Jalur Diperbaiki ke Root) ---
 MODEL_PATH = 'ai_diagnosa_pipeline.pkl'
 LABEL_ENCODER_PATH = 'label_encoder.pkl'
 
+# --- 2. Fungsi Memuat Model ---
 @st.cache_resource
 def load_assets():
     """Memuat pipeline model dan label encoder dari root directory."""
@@ -20,6 +24,7 @@ def load_assets():
         
     return model_pipeline, label_encoder
 
+# Muat aset model
 model_pipeline, label_encoder = load_assets()
 
 # --- 3. Fungsi Utama Aplikasi Streamlit ---
@@ -47,14 +52,15 @@ def main():
             return
 
         if model_pipeline is None or label_encoder is None:
-            # Error ditangani di fungsi load_assets
             return
 
         try:
             with st.spinner('Model sedang memproses...'):
-                # Core Prediction Logic
-                # Menggunakan .predict pada pipeline (yang sudah termasuk TF-IDF dan Classifier)
-                prediction_encoded = model_pipeline.predict([input_text])[0] 
+                # --- PERBAIKAN KRITIS DI SINI: Ubah input menjadi Pandas Series ---
+                # Pipeline akan menerima Series, yang menjaga struktur 2D array yang diharapkan.
+                input_series = pd.Series([input_text])
+                
+                prediction_encoded = model_pipeline.predict(input_series)[0] 
                 
                 # Inverse Transform untuk mendapatkan nama diagnosis
                 predicted_diagnosis = label_encoder.inverse_transform([prediction_encoded])[0]
@@ -66,7 +72,9 @@ def main():
             st.info("Prediksi ini adalah output Machine Learning dan harus dikonfirmasi oleh profesional yang kompeten.")
 
         except Exception as e:
-            st.error(f"Gagal saat prediksi. Pastikan format input benar. Error: {e}")
+            st.error(f"Gagal saat prediksi. Pastikan format input benar.")
+            # Tambahkan detail error untuk debugging lebih lanjut jika diperlukan
+            st.code(f"Error detail: {e}") 
 
 # Jalankan Aplikasi
 if __name__ == "__main__":
