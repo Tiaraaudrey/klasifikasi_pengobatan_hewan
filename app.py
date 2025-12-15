@@ -4,11 +4,12 @@ import numpy as np
 import pandas as pd # Wajib untuk membuat DataFrame input
 
 # --- 1. KONFIGURASI FILE MODEL (Jalur Diperbaiki ke Root) ---
-# Pastikan file-file ini berada di FOLDER UTAMA (ROOT) GitHub Anda
 MODEL_PATH = 'ai_diagnosa_pipeline.pkl'
 LABEL_ENCODER_PATH = 'label_encoder.pkl'
 
 # --- 2. Fungsi Memuat Model ---
+# Kita gunakan st.cache_resource untuk memastikan model hanya dimuat sekali
+@st.cache_resource
 def load_assets():
     """Memuat pipeline model dan label encoder dari root directory."""
     model_pipeline = None
@@ -24,11 +25,8 @@ def load_assets():
         
     return model_pipeline, label_encoder
 
-# Muat aset model
-model_pipeline, label_encoder = load_assets()
-
 # --- 3. Fungsi Utama Aplikasi Streamlit ---
-def main():
+def main(model_pipeline, label_encoder): # Menerima model sebagai argumen
     st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="centered")
 
     st.title("Diagnosa Penyakit Hewan melalui Gejala")
@@ -50,7 +48,7 @@ def main():
         height=150
     )
 
-    # --- Input Jenis Hewan (BARU) ---
+    # --- Input Jenis Hewan ---
     input_animal = st.selectbox(
         f"**2. Pilih Jenis Hewan**",
         options=animal_list
@@ -64,13 +62,13 @@ def main():
             return
 
         if model_pipeline is None or label_encoder is None:
+            # Notifikasi error sudah ditampilkan di load_assets
             return
 
         try:
             with st.spinner('Model sedang memproses...'):
                 
                 # 1. Konversi input ke DataFrame DUA KOLOM
-                # Ini adalah format input yang dibutuhkan oleh ColumnTransformer Anda.
                 input_df = pd.DataFrame({
                     'ciri_kasus': [input_text], 
                     ANIMAL_COL: [input_animal] # Menambahkan kolom Jenis Hewan
@@ -95,5 +93,6 @@ def main():
 
 # Jalankan Aplikasi
 if __name__ == "__main__":
-    main()
-
+    # --- 4. PEMUATAN ASET GLOBAL DAN EKSEKUSI MAIN ---
+    model_pipeline, label_encoder = load_assets()
+    main(model_pipeline, label_encoder)
