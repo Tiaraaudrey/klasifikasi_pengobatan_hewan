@@ -29,6 +29,17 @@ def load_assets():
     return model_pipeline, label_encoder
 
 # --- 3. Fungsi Memuat dan Memproses Data Mentah (Untuk TMI) ---
+def extract_jumlah_ekor(dosis_text):
+    """Mengekstrak angka jumlah ekor dari string Dosis (default 1 jika tidak ditemukan)."""
+    text = str(dosis_text).lower()
+    # Mencari pola angka diikuti oleh 'ekor'
+    match = re.search(r'(\d+)\s*ekor', text)
+    if match:
+        return int(match.group(1))
+    else:
+        # Jika tidak ada keterangan ekor, asumsikan 1 ekor/kasus
+        return 1
+        
 def extract_animal(dosis_text):
     """Mengekstrak jenis hewan dari string Dosis."""
     text = str(dosis_text).lower()
@@ -239,3 +250,4 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
