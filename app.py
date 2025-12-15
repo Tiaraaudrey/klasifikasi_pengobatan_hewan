@@ -117,11 +117,13 @@ def display_tmi(df):
     if df.empty:
         st.info("Data tidak tersedia untuk Analisis TMI.")
         return
-        
-    # --- Row 1: Metrik Utama ---
+    
+    # --- Row 1: Metrik Utama (Menggunakan Sum dari 'Jumlah Kasus') ---
     col1, col2, col3 = st.columns(3)
     
-    col1.metric("Total Sampel Data", f"{len(df):,}")
+    # Hitung total kasus dari kolom baru 'Jumlah Kasus'
+    total_cases = df['Jumlah Kasus'].sum() 
+    col1.metric("Total Sampel Data (Ekor)", f"{total_cases:,}")
     
     num_diagnoses = df[Y_COL].nunique()
     col2.metric("Jumlah Total Diagnosis Unik", f"{num_diagnoses}")
@@ -137,19 +139,21 @@ def display_tmi(df):
     # --- Row 2: Top 5 Diagnosis Terbanyak dan Distribusi Hewan ---
     col4, col5 = st.columns([1, 2])
     
-    # 1. Top 5 Diagnosis
-    top_diagnosis = df[Y_COL].value_counts().head(5)
+    # 1. Top 5 Diagnosis (Menggunakan SUM)
+    top_diagnosis = df.groupby(Y_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5)
     with col4:
-        st.subheader("Top 5 Diagnosis")
+        st.subheader("Top 5 Diagnosis (Ekor)")
         top_diagnosis_df = top_diagnosis.reset_index()
         top_diagnosis_df.columns = ['Diagnosis', 'Jumlah Kasus']
         st.dataframe(top_diagnosis_df, use_container_width=True, hide_index=True)
+        # 
 
-    # 2. Distribusi Jenis Hewan
-    animal_counts = df[ANIMAL_COL].value_counts().head(5)
+    # 2. Distribusi Jenis Hewan (Menggunakan SUM)
+    animal_counts = df.groupby(ANIMAL_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5)
     with col5:
-        st.subheader("Distribusi Jenis Hewan Terbanyak")
+        st.subheader("Distribusi Jenis Hewan Terbanyak (Ekor)")
         st.bar_chart(animal_counts)
+        # 
 
     st.markdown("___")
 
@@ -157,11 +161,11 @@ def display_tmi(df):
     if 'Tahun_Bulan' in df.columns and (df['Tahun_Bulan'] != 'N/A').any():
         st.subheader("Tren 5 Penyakit Terbanyak dari Bulan ke Bulan")
         
-        # 1. Identifikasi 5 diagnosis teratas secara keseluruhan
-        top_5_diseases = df[Y_COL].value_counts().head(5).index.tolist()
+        # 1. Identifikasi 5 diagnosis teratas secara keseluruhan (berdasarkan sum)
+        top_5_diseases = df.groupby(Y_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5).index.tolist()
         
-        # 2. Hitung jumlah kasus per tahun-bulan
-        df_trend = df[df[Y_COL].isin(top_5_diseases)].groupby(['Tahun_Bulan', Y_COL]).size().reset_index(name='Jumlah Kasus')
+        # 2. Hitung jumlah kasus per tahun-bulan (Menggunakan SUM)
+        df_trend = df[df[Y_COL].isin(top_5_diseases)].groupby(['Tahun_Bulan', Y_COL])['Jumlah Kasus'].sum().reset_index(name='Jumlah Kasus')
         
         # 3. Pivot data: Menggunakan 'Tahun_Bulan' sebagai index
         df_pivot = df_trend.pivot_table(index='Tahun_Bulan', columns=Y_COL, values='Jumlah Kasus', fill_value=0)
@@ -174,12 +178,11 @@ def display_tmi(df):
 
         st.markdown(f"""
         <p style='font-size: small; color: gray;'>
-        Visualisasi di atas menunjukkan tren kasus bulanan dari 5 diagnosis terbanyak ({', '.join(top_5_diseases)}).
+        Visualisasi di atas menunjukkan tren total ekor/kasus bulanan dari 5 diagnosis terbanyak ({', '.join(top_5_diseases)}).
         </p>
         """, unsafe_allow_html=True)
     else:
         st.info("Tren penyakit per bulan tidak dapat ditampilkan karena kolom tanggal tidak tersedia atau tidak valid.")
-
 
 # --- 5. Fungsi Utama Aplikasi Streamlit (Main) ---
 def main(model_pipeline, label_encoder, raw_df): # Menerima model dan data mentah
@@ -252,5 +255,6 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
