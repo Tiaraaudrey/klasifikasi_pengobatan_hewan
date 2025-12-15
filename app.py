@@ -77,49 +77,76 @@ def load_raw_data():
 # --- 4. Fungsi Menampilkan TMI (Insights) ---
 def display_tmi(df):
     
-    st.markdown("<h2 style='text-align: center;'>--- 📊 Analisis Data Cepat (TMI) ---</h2>", unsafe_allow_html=True)
+    st.markdown("## 📈 TMI: Tren Penyakit dan Data Penting")
+    st.markdown("---")
     
     if df.empty:
         st.info("File data CSV tidak ditemukan di folder utama (root). Analisis tidak dapat ditampilkan.")
         return
         
-    # --- Row 1: Metrik Utama ---
-    col1, col2, col3 = st.columns(3)
-    
-    col1.metric("Total Sampel Data", f"{len(df):,}")
-    
-    num_diagnoses = df[Y_COL].nunique()
-    col2.metric("Jumlah Total Diagnosis Unik", f"{num_diagnoses}")
-
     # Asumsi kolom 'tanggal_kasus' ada di data Anda
     try:
         df['Tahun'] = df['tanggal_kasus'].astype(str).str[:4]
+        
+        # --- Row 1: Metrik Utama ---
+        col1, col2, col3 = st.columns(3)
+        
+        col1.metric("Total Sampel Data", f"{len(df):,}")
+        
+        num_diagnoses = df[Y_COL].nunique()
+        col2.metric("Jumlah Total Diagnosis Unik", f"{num_diagnoses}")
+
         num_years = df['Tahun'].nunique()
         col3.metric("Jangkauan Tahun Data", f"{num_years} Tahun")
-    except KeyError:
-        col3.metric("Jangkauan Tahun Data", "N/A (Kolom tanggal_kasus tidak ditemukan)")
 
+    except KeyError:
+        st.error("Kolom 'tanggal_kasus' tidak ditemukan. Analisis Tren Tahunan tidak dapat ditampilkan.")
+        return # Hentikan fungsi jika kolom krusial hilang
 
     st.markdown("---")
 
-    # --- Row 2: Distribusi Topik ---
-    col4, col5 = st.columns(2)
-
+    # --- Row 2: Top 5 Diagnosis Terbanyak (Tetap Dipertahankan) ---
+    col4, col5 = st.columns([1, 2]) # Sesuaikan lebar kolom
+    
     # 1. Diagnosis Paling Sering
     top_diagnosis = df[Y_COL].value_counts().head(5)
     with col4:
-        st.subheader("Top 5 Diagnosis Terbanyak")
-        # Mengganti index menjadi kolom untuk tampilan yang lebih baik
+        st.subheader("Top 5 Diagnosis")
         top_diagnosis_df = top_diagnosis.reset_index()
         top_diagnosis_df.columns = ['Diagnosis', 'Jumlah Kasus']
         st.dataframe(top_diagnosis_df, use_container_width=True, hide_index=True)
 
-    # 2. Distribusi Jenis Hewan
-    animal_counts = df[ANIMAL_COL].value_counts()
+    # 2. Distribusi Jenis Hewan (Tetap ada, tapi dalam format chart)
+    animal_counts = df[ANIMAL_COL].value_counts().head(5)
     with col5:
-        st.subheader("Distribusi Jenis Hewan")
-        st.bar_chart(animal_counts) # 
+        st.subheader("Distribusi Jenis Hewan Terbanyak")
+        st.bar_chart(animal_counts)
+        # 
 
+    st.markdown("___")
+
+    # --- Row 3: Analisis Tren Penyakit Per Tahun (BARU & PENTING) ---
+    st.subheader("Tren 5 Penyakit Terbanyak dari Tahun ke Tahun")
+    
+    # 1. Identifikasi 5 diagnosis teratas secara keseluruhan
+    top_5_diseases = df[Y_COL].value_counts().head(5).index.tolist()
+    
+    # 2. Hitung jumlah kasus per tahun untuk 5 penyakit teratas tersebut
+    df_trend = df[df[Y_COL].isin(top_5_diseases)].groupby(['Tahun', Y_COL]).size().reset_index(name='Jumlah Kasus')
+    
+    # 3. Pivot data untuk Streamlit (Tahun sebagai Index, Diagnosis sebagai Kolom)
+    df_pivot = df_trend.pivot_table(index='Tahun', columns=Y_COL, values='Jumlah Kasus', fill_value=0)
+    
+    # Tampilkan Line Chart
+    st.line_chart(df_pivot)
+    # 
+
+    st.markdown(f"""
+    <p style='font-size: small; color: gray;'>
+    Visualisasi di atas menunjukkan tren kasus dari 5 diagnosis terbanyak ({', '.join(top_5_diseases)}).
+    Pola ini dapat mengindikasikan lonjakan kasus musiman atau tren epidemiologi.
+    </p>
+    """, unsafe_allow_html=True)
 # Muat aset model dan data
 model_pipeline, label_encoder = load_assets()
 RAW_DF = load_raw_data()
@@ -192,3 +219,4 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
