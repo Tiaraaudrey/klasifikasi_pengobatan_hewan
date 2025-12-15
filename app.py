@@ -66,22 +66,26 @@ def load_raw_data():
         df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != 'tidak sakit']
         df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != '']
 
-        # --- FIX KRUSIAL: Konversi Kolom Tanggal dan Ekstraksi Tahun ---
-        TANGGAL_COL = 'tanggal_kasus' # Gunakan kolom ini sesuai output notebook
+       TANGGAL_COL = 'tanggal_kasus' # Gunakan kolom ini sesuai output notebook
         
         if TANGGAL_COL in df_kasus.columns:
             # Mengubah kolom tanggal menjadi datetime, error='coerce' akan mengubah yang gagal menjadi NaT
             df_kasus[TANGGAL_COL] = pd.to_datetime(df_kasus[TANGGAL_COL], errors='coerce')
             
-            # Ekstrak Tahun dari tanggal
+            # Ekstrak TAHUN-BULAN untuk tren
+            df_kasus['Tahun_Bulan'] = df_kasus[TANGGAL_COL].dt.strftime('%Y-%m')
+            
+            # Ekstrak TAHUN untuk metrik
             df_kasus['Tahun'] = df_kasus[TANGGAL_COL].dt.year.astype('Int64', errors='ignore').astype(str)
             
-            # Hapus baris yang tahunnya tidak valid setelah konversi
-            df_kasus = df_kasus[df_kasus['Tahun'] != '<NA>'].copy()
+            # Hapus baris yang tanggal atau tahunnya tidak valid setelah konversi
+            df_kasus = df_kasus[df_kasus['Tahun'].notna() & (df_kasus['Tahun'] != '<NA>')].copy()
+            df_kasus = df_kasus[df_kasus['Tahun_Bulan'].notna() & (df_kasus['Tahun_Bulan'] != 'NaT')].copy()
         else:
             # Jika kolom tanggal_kasus tidak ada
-            st.warning(f"Kolom '{TANGGAL_COL}' tidak ditemukan di data mentah. Tren Tahunan tidak akan muncul.")
-            df_kasus['Tahun'] = 'N/A' # Tambahkan kolom dummy
+            st.warning(f"Kolom '{TANGGAL_COL}' tidak ditemukan di data mentah. Tren Tahunan/Bulanan tidak akan muncul.")
+            df_kasus['Tahun'] = 'N/A' 
+            df_kasus['Tahun_Bulan'] = 'N/A'
             
         # --- FILTERING KELAS MINORITAS (Sama seperti di notebook) ---
         min_class_count = 5 
@@ -242,5 +246,6 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
 
 
