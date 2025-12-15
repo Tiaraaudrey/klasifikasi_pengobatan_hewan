@@ -9,7 +9,7 @@ MODEL_PATH = 'ai_diagnosa_pipeline.pkl'
 LABEL_ENCODER_PATH = 'label_encoder.pkl'
 ANIMAL_COL = 'Jenis_Hewan_Dominan' 
 Y_COL = 'Diagnosa Banding'
-TANGGAL_COL = 'tanggal_kasus' # Kolom tanggal untuk analisis TMI
+TANGGAL_COL = 'tanggal_kasus'
 
 # --- 2. Fungsi Memuat Aset (Model) ---
 @st.cache_resource
@@ -37,7 +37,6 @@ def extract_jumlah_ekor(dosis_text):
     if match:
         return int(match.group(1))
     else:
-        # Jika tidak ada keterangan ekor, asumsikan 1 ekor/kasus
         return 1
         
 def extract_animal(dosis_text):
@@ -111,7 +110,7 @@ def load_raw_data():
 # --- 4a. Fungsi Menampilkan TMI HIGHLIGHTS (Di Samping) ---
 def display_tmi_highlight(df):
     
-    st.markdown("### 📊 Kilas Data Utama (TMI)")
+    st.markdown("### 📊 Kilas Insight Data Pengobatan Hewan")
     st.markdown("___")
     
     if df.empty:
@@ -124,7 +123,7 @@ def display_tmi_highlight(df):
     
     # Metrik
     st.metric("Total Ekor Diobati", f"{total_cases:,}")
-    st.metric("Diagnosis Unik", f"{num_diagnoses}")
+    st.metric("Diagnosis", f"{num_diagnoses}")
 
     # Top 5 Diagnosis (Ringkas dalam bentuk DataFrame)
     st.markdown("<br>", unsafe_allow_html=True)
@@ -255,6 +254,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
