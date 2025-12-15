@@ -9,7 +9,6 @@ MODEL_PATH = 'ai_diagnosa_pipeline.pkl'
 LABEL_ENCODER_PATH = 'label_encoder.pkl'
 
 # --- 2. Fungsi Memuat Model ---
-@st.cache_resource
 def load_assets():
     """Memuat pipeline model dan label encoder dari root directory."""
     model_pipeline = None
@@ -64,6 +63,7 @@ def main():
                 # 2. Prediksi
                 prediction_encoded = model_pipeline.predict(input_df)[0] 
                 
+                
                 # 3. Inverse Transform
                 predicted_diagnosis = label_encoder.inverse_transform([prediction_encoded])[0]
 
@@ -80,3 +80,4 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
