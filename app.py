@@ -33,15 +33,27 @@ def main():
 
     st.title("Diagnosa AI: Klasifikasi Teks Kasus (Project 3)")
     st.markdown("""
-        Masukkan ciri-ciri kasus (gejala) dalam bentuk teks untuk mendapatkan prediksi diagnosis dari model Klasifikasi NLP.
+        Masukkan ciri-ciri kasus (gejala) dan jenis hewan untuk mendapatkan prediksi diagnosis dari model Klasifikasi NLP.
     """)
     st.markdown("---")
+    
+    # --- Konstanta Hewan ---
+    ANIMAL_COL = 'Jenis_Hewan_Dominan' # Harus sama persis dengan nama kolom di notebook Cell 5!
+    
+    # Daftar Jenis Hewan yang diekstrak (Harus sesuai dengan yang ditemukan di Cell 1 notebook)
+    animal_list = ['Sapi', 'Kambing', 'Kucing', 'Anjing', 'Lainnya'] 
 
-    # Input Teks dari User
+    # --- Input Teks dari User ---
     input_text = st.text_area(
-        "**Masukkan Ciri-ciri Kasus (Gejala)**", 
+        "**1. Masukkan Ciri-ciri Kasus (Gejala)**", 
         placeholder="Contoh: Demam, batuk, leleran hidung, dan ada pembengkakan pada kelenjar getah bening.",
         height=150
+    )
+
+    # --- Input Jenis Hewan (BARU) ---
+    input_animal = st.selectbox(
+        f"**2. Pilih Jenis Hewan ({ANIMAL_COL})**",
+        options=animal_list
     )
 
     # Tombol Prediksi
@@ -55,10 +67,14 @@ def main():
             return
 
         try:
-            # Perhatikan spasi (indentation) di bawah baris 'with'
             with st.spinner('Model sedang memproses...'):
-                # 1. Konversi input ke DataFrame dengan nama kolom yang benar (ciri_kasus)
-                input_df = pd.DataFrame({'ciri_kasus': [input_text]})
+                
+                # 1. Konversi input ke DataFrame DUA KOLOM
+                # Ini adalah format input yang dibutuhkan oleh ColumnTransformer Anda.
+                input_df = pd.DataFrame({
+                    'ciri_kasus': [input_text], 
+                    ANIMAL_COL: [input_animal] # Menambahkan kolom Jenis Hewan
+                })
                 
                 # 2. Prediksi
                 prediction_encoded = model_pipeline.predict(input_df)[0] 
@@ -74,10 +90,9 @@ def main():
             st.info("Prediksi ini adalah output Machine Learning dan harus dikonfirmasi oleh profesional yang kompeten.")
 
         except Exception as e:
-            st.error(f"Gagal saat prediksi.")
+            st.error(f"Gagal saat prediksi. Pastikan Anda sudah mengupload model .pkl terbaru yang dilatih dengan 2 fitur (Teks + Hewan).")
             st.code(f"Error detail: {e}") 
 
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
-
