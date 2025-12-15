@@ -108,153 +108,154 @@ def load_raw_data():
         st.error(f"Gagal memuat atau memproses data mentah. Detail error: {e}")
         return pd.DataFrame()
 
-# --- 4. Fungsi Menampilkan TMI (Insights) ---
-def display_tmi(df):
+# --- 4a. Fungsi Menampilkan TMI HIGHLIGHTS (Di Samping) ---
+def display_tmi_highlight(df):
     
-    st.markdown("## 📈 TMI: Tren Penyakit dan Data Penting")
-    st.markdown("---")
+    st.markdown("### 📊 Kilas Data Utama (TMI)")
+    st.markdown("___")
     
     if df.empty:
-        st.info("Data tidak tersedia untuk Analisis TMI.")
+        st.info("Data tidak tersedia.")
         return
-    
-    # --- Row 1: Metrik Utama (Menggunakan Sum dari 'Jumlah Kasus') ---
-    col1, col2, col3 = st.columns(3)
-    
-    # Hitung total kasus dari kolom baru 'Jumlah Kasus'
+        
+    # Variabel Global dari TMI
     total_cases = df['Jumlah Kasus'].sum() 
-    col1.metric("Total Sampel Data (Ekor)", f"{total_cases:,}")
-    
     num_diagnoses = df[Y_COL].nunique()
-    col2.metric("Jumlah Total Diagnosis Unik", f"{num_diagnoses}")
-
-    if 'Tahun' in df.columns and (df['Tahun'] != 'N/A').any():
-        num_years = df['Tahun'].nunique()
-        col3.metric("Jangkauan Tahun Data", f"{num_years} Tahun")
-    else:
-        col3.metric("Jangkauan Tahun Data", "N/A")
-
-    st.markdown("---")
-
-    # --- Row 2: Top 5 Diagnosis Terbanyak dan Distribusi Hewan ---
-    col4, col5 = st.columns([1, 2])
     
-    # 1. Top 5 Diagnosis (Menggunakan SUM)
+    # Metrik
+    st.metric("Total Ekor Diobati", f"{total_cases:,}")
+    st.metric("Diagnosis Unik", f"{num_diagnoses}")
+
+    # Top 5 Diagnosis (Ringkas dalam bentuk DataFrame)
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("**Top 5 Diagnosis (Ekor)**")
+    
     top_diagnosis = df.groupby(Y_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5)
-    with col4:
-        st.subheader("Top 5 Diagnosis (Ekor)")
-        top_diagnosis_df = top_diagnosis.reset_index()
-        top_diagnosis_df.columns = ['Diagnosis', 'Jumlah Kasus']
-        st.dataframe(top_diagnosis_df, use_container_width=True, hide_index=True)
-        # 
+    top_diagnosis_df = top_diagnosis.reset_index()
+    top_diagnosis_df.columns = ['Diagnosis', 'Jumlah Kasus']
+    st.dataframe(top_diagnosis_df, use_container_width=True, hide_index=True)
 
-    # 2. Distribusi Jenis Hewan (Menggunakan SUM)
-    animal_counts = df.groupby(ANIMAL_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5)
-    with col5:
-        st.subheader("Distribusi Jenis Hewan Terbanyak (Ekor)")
-        st.bar_chart(animal_counts)
-        # 
 
-    st.markdown("___")
-
-    # --- Row 3: Analisis Tren Penyakit Per Bulan ---
-    if 'Tahun_Bulan' in df.columns and (df['Tahun_Bulan'] != 'N/A').any():
-        st.subheader("Tren 5 Penyakit Terbanyak dari Bulan ke Bulan")
+# --- 4b. Fungsi Menampilkan TMI TREN (Di Bawah) ---
+def display_tmi_tren(df):
+    
+    st.markdown("## 📈 Tren Penyakit dari Bulan ke Bulan")
+    st.markdown("---")
+    
+    if df.empty or 'Tahun_Bulan' not in df.columns or (df['Tahun_Bulan'] == 'N/A').all():
+        st.info("Tren penyakit per bulan tidak dapat ditampilkan karena data tanggal tidak tersedia atau tidak valid.")
+        return
         
-        # 1. Identifikasi 5 diagnosis teratas secara keseluruhan (berdasarkan sum)
-        top_5_diseases = df.groupby(Y_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5).index.tolist()
-        
-        # 2. Hitung jumlah kasus per tahun-bulan (Menggunakan SUM)
-        df_trend = df[df[Y_COL].isin(top_5_diseases)].groupby(['Tahun_Bulan', Y_COL])['Jumlah Kasus'].sum().reset_index(name='Jumlah Kasus')
-        
-        # 3. Pivot data: Menggunakan 'Tahun_Bulan' sebagai index
-        df_pivot = df_trend.pivot_table(index='Tahun_Bulan', columns=Y_COL, values='Jumlah Kasus', fill_value=0)
-        
-        # 4. Sorting data berdasarkan index (YYYY-MM)
-        df_pivot.sort_index(inplace=True)
-        
-        # Tampilkan Line Chart
-        st.line_chart(df_pivot) 
-
-        st.markdown(f"""
-        <p style='font-size: small; color: gray;'>
-        Visualisasi di atas menunjukkan tren total ekor/kasus bulanan dari 5 diagnosis terbanyak ({', '.join(top_5_diseases)}).
-        </p>
-        """, unsafe_allow_html=True)
-    else:
-        st.info("Tren penyakit per bulan tidak dapat ditampilkan karena kolom tanggal tidak tersedia atau tidak valid.")
-
+    # 1. Identifikasi 5 diagnosis teratas secara keseluruhan (berdasarkan sum)
+    top_5_diseases = df.groupby(Y_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5).index.tolist()
+    
+    # 2. Hitung jumlah kasus per tahun-bulan (Menggunakan SUM)
+    df_trend = df[df[Y_COL].isin(top_5_diseases)].groupby(['Tahun_Bulan', Y_COL])['Jumlah Kasus'].sum().reset_index(name='Jumlah Kasus')
+    
+    # 3. Pivot data: Menggunakan 'Tahun_Bulan' sebagai index
+    df_pivot = df_trend.pivot_table(index='Tahun_Bulan', columns=Y_COL, values='Jumlah Kasus', fill_value=0)
+    
+    # 4. Sorting data berdasarkan index (YYYY-MM)
+    df_pivot.sort_index(inplace=True)
+    
+    # Tampilkan Line Chart
+    st.line_chart(df_pivot) 
+    st.markdown(f"""
+    <p style='font-size: small; color: gray;'>
+    Visualisasi di atas menunjukkan tren total ekor/kasus bulanan dari 5 diagnosis terbanyak ({', '.join(top_5_diseases)}).
+    </p>
+    """, unsafe_allow_html=True)
+    
 # --- 5. Fungsi Utama Aplikasi Streamlit (Main) ---
-def main(model_pipeline, label_encoder, raw_df): # Menerima model dan data mentah
+def main(model_pipeline, label_encoder, raw_df): 
     st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="centered")
 
     st.title("Vet Diagnosa AI: Klasifikasi Penyakit Hewan")
-    st.markdown("""
-        **Tool Prediksi Diagnosis** menggunakan model *Machine Learning* yang dilatih dari data kasus dan gejala klinis.
-    """)
     st.markdown("---")
+
+    # --- MEMBUAT DUA KOLOM UTAMA (RASIO 3:2) ---
+    col_prediksi, col_tmi_highlight = st.columns([3, 2]) 
     
-    # --- Konstanta Hewan ---
-    animal_list = ['Sapi', 'Kambing', 'Kucing', 'Anjing', 'Lainnya'] 
-
-    # --- Input Teks dari User ---
-    input_text = st.text_area(
-        "**1. Masukkan Ciri-ciri Kasus (Gejala)**", 
-        placeholder="Contoh: Demam, batuk, leleran hidung, dan ada pembengkakan pada kelenjar getah bening.",
-        height=150
-    )
-
-    # --- Input Jenis Hewan ---
-    input_animal = st.selectbox(
-        f"**2. Pilih Jenis Hewan**",
-        options=animal_list
-    )
-
-    # Tombol Prediksi
-    if st.button("Lakukan Prediksi Diagnosis"):
+    # -----------------------------------------------------
+    # --- KOLOM KIRI: FORMULIR PREDIKSI ---
+    with col_prediksi:
+        st.header("Diagnosis Gejala (Model AI)")
+        st.markdown("""
+            **Tool Prediksi Diagnosis** menggunakan model *Machine Learning* yang dilatih dari data kasus dan gejala klinis.
+        """)
+        st.markdown("___")
         
-        if not input_text.strip():
-            st.warning("Mohon masukkan teks ciri-ciri kasus.")
-            return
+        # --- Konstanta Hewan ---
+        animal_list = ['Sapi', 'Kambing', 'Kucing', 'Anjing', 'Lainnya'] 
 
-        if model_pipeline is None or label_encoder is None:
-            return
+        # --- Input Teks dari User ---
+        input_text = st.text_area(
+            "**1. Masukkan Ciri-ciri Kasus (Gejala)**", 
+            placeholder="Contoh: Demam, batuk, leleran hidung, dan ada pembengkakan pada kelenjar getah bening.",
+            height=150
+        )
 
-        try:
-            with st.spinner('Model sedang memproses...'):
-                
-                # 1. Konversi input ke DataFrame DUA KOLOM
-                input_df = pd.DataFrame({
-                    'ciri_kasus': [input_text], 
-                    ANIMAL_COL: [input_animal] 
-                })
-                
-                # 2. Prediksi
-                prediction_encoded = model_pipeline.predict(input_df)[0] 
-                
-                # 3. Inverse Transform
-                predicted_diagnosis = label_encoder.inverse_transform([prediction_encoded])[0]
+        # --- Input Jenis Hewan ---
+        input_animal = st.selectbox(
+            f"**2. Pilih Jenis Hewan**",
+            options=animal_list
+        )
 
-            st.header("Hasil Prediksi")
-            st.success(f"Diagnosis yang Diprediksi: **{predicted_diagnosis}**")
+        # Tombol Prediksi
+        if st.button("Lakukan Prediksi Diagnosis"):
+            # ... (Semua logika prediksi tetap sama di sini) ...
             
-            st.markdown("---")
-            st.info("Prediksi ini adalah output Machine Learning dan harus dikonfirmasi oleh profesional yang kompeten.")
+            if not input_text.strip():
+                st.warning("Mohon masukkan teks ciri-ciri kasus.")
+                return
 
-        except Exception as e:
-            st.error(f"Gagal saat prediksi.")
-            st.code(f"Error detail: {e}") 
+            if model_pipeline is None or label_encoder is None:
+                return
 
-    # --- TAMPILAN TMI (INSIGHTS) ---
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    display_tmi(raw_df)
+            try:
+                with st.spinner('Model sedang memproses...'):
+                    
+                    # 1. Konversi input ke DataFrame DUA KOLOM
+                    input_df = pd.DataFrame({
+                        'ciri_kasus': [input_text], 
+                        ANIMAL_COL: [input_animal] 
+                    })
+                    
+                    # 2. Prediksi
+                    prediction_encoded = model_pipeline.predict(input_df)[0] 
+                    
+                    # 3. Inverse Transform
+                    predicted_diagnosis = label_encoder.inverse_transform([prediction_encoded])[0]
 
+                st.subheader("Hasil Prediksi")
+                st.success(f"Diagnosis yang Diprediksi: **{predicted_diagnosis}**")
+                st.info("Prediksi ini adalah output Machine Learning dan harus dikonfirmasi oleh profesional yang kompeten.")
+
+            except Exception as e:
+                st.error(f"Gagal saat prediksi.")
+                st.code(f"Error detail: {e}") 
+                
+        # --- END KOLOM KIRI ---
+    # -----------------------------------------------------
+    
+    # -----------------------------------------------------
+    # --- KOLOM KANAN: HIGHLIGHT TMI ---
+    with col_tmi_highlight:
+        # Kita akan membuat fungsi baru atau memanggil display_tmi dengan mode 'highlight'
+        display_tmi_highlight(raw_df) 
+    # --- END KOLOM KANAN ---
+    # -----------------------------------------------------
+
+    st.markdown("___")
+    # --- TAMPILAN TMI (TREN BESAR) DI BAWAH ---
+    display_tmi_tren(raw_df)
 # Jalankan Aplikasi
 if __name__ == "__main__":
     # --- PEMUATAN ASET GLOBAL DAN EKSEKUSI MAIN ---
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
