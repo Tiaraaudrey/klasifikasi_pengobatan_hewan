@@ -175,6 +175,11 @@ def display_tmi(df):
         """, unsafe_allow_html=True)
     else:
         st.info("Tren penyakit per bulan tidak dapat ditampilkan karena kolom tanggal tidak tersedia atau tidak valid.")
+    # Muat aset model (Pipeline dan Encoder)
+    model_pipeline, label_encoder = load_assets()
+
+    # Muat data mentah untuk TMI
+    RAW_DF = load_raw_data()
 # --- 5. Fungsi Utama Aplikasi Streamlit ---
 def main():
     st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="centered")
@@ -243,6 +248,7 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
 
 
 
