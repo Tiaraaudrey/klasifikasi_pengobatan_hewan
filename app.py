@@ -68,6 +68,8 @@ def load_raw_data():
         # Pra-pemrosesan
         df_kasus['Dosis'] = df_kasus['Dosis'].fillna('')
         df_kasus[ANIMAL_COL] = df_kasus['Dosis'].apply(extract_animal)
+
+        df_kasus['Jumlah Kasus'] = df_kasus['Dosis'].apply(extract_jumlah_ekor)
         
         # Pembersihan Target Y
         df_kasus.dropna(subset=[Y_COL], inplace=True)
@@ -250,4 +252,5 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
