@@ -56,7 +56,7 @@ def load_raw_data():
         df_obat_2025 = pd.read_csv('LAPORAN PENGOBATAN 2025.csv', sep=';')
         df_kasus = pd.concat([df_obat_2022, df_obat_2023, df_obat_2024, df_obat_2025], ignore_index=True)
         
-        # Pra-pemrosesan (Wajib sama seperti di notebook Cell 1)
+        # Pra-pemrosesan
         df_kasus['Tanda/Sindrom'] = df_kasus['Tanda/Sindrom'].fillna('')
         df_kasus['Dosis'] = df_kasus['Dosis'].fillna('')
         df_kasus[ANIMAL_COL] = df_kasus['Dosis'].apply(extract_animal)
@@ -65,8 +65,9 @@ def load_raw_data():
         df_kasus.dropna(subset=[Y_COL], inplace=True)
         df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != 'tidak sakit']
         df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != '']
-
-       TANGGAL_COL = 'tanggal_kasus' # Gunakan kolom ini sesuai output notebook
+        
+        # --- FIX KRUSIAL: Konversi Kolom Tanggal dan Ekstraksi Tahun/Bulan ---
+        TANGGAL_COL = 'tanggal_kasus' # Gunakan kolom ini sesuai output notebook
         
         if TANGGAL_COL in df_kasus.columns:
             # Mengubah kolom tanggal menjadi datetime, error='coerce' akan mengubah yang gagal menjadi NaT
@@ -85,22 +86,23 @@ def load_raw_data():
             # Jika kolom tanggal_kasus tidak ada
             st.warning(f"Kolom '{TANGGAL_COL}' tidak ditemukan di data mentah. Tren Tahunan/Bulanan tidak akan muncul.")
             df_kasus['Tahun'] = 'N/A' 
-            df_kasus['Tahun_Bulan'] = 'N/A'
+            df_kasus['Tahun_Bulan'] = 'N/A' 
             
         # --- FILTERING KELAS MINORITAS (Sama seperti di notebook) ---
         min_class_count = 5 
         value_counts = df_kasus[Y_COL].value_counts()
         valid_classes = value_counts[value_counts >= min_class_count].index
         df_kasus = df_kasus[df_kasus[Y_COL].isin(valid_classes)].reset_index(drop=True).copy()
-        
+
         return df_kasus
         
     except FileNotFoundError:
+        st.warning("File CSV data kasus tidak ditemukan. TMI tidak akan aktif.")
         return pd.DataFrame()
     except Exception as e:
-        st.error(f"Gagal memuat atau memproses data mentah: {e}")
+        # Menampilkan detail error di Streamlit jika ada masalah selain FileNotFoundError
+        st.error(f"Gagal memuat atau memproses data mentah. Detail error: {e}")
         return pd.DataFrame()
-
 # --- 4. Fungsi Menampilkan TMI (Insights) ---
 def display_tmi(df):
     
@@ -246,6 +248,7 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
 
 
 
