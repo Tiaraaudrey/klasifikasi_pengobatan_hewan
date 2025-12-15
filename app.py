@@ -1,16 +1,22 @@
 import streamlit as st
 import joblib
 import numpy as np
-import pandas as pd # Wajib untuk membuat DataFrame input
+import pandas as pd
+import re # Diperlukan untuk ekstraksi hewan
 
 # --- 1. KONFIGURASI FILE MODEL (Jalur Diperbaiki ke Root) ---
-# Pastikan file-file ini berada di FOLDER UTAMA (ROOT) GitHub Anda
 MODEL_PATH = 'ai_diagnosa_pipeline.pkl'
 LABEL_ENCODER_PATH = 'label_encoder.pkl'
+ANIMAL_COL = 'Jenis_Hewan_Dominan'
+Y_COL = 'Diagnosa Banding'
 
 # --- 2. Fungsi Memuat Model ---
 def load_assets():
     """Memuat pipeline model dan label encoder dari root directory."""
+    # st.cache_resource digunakan untuk mencegah pemuatan ulang yang tidak perlu
+    # Namun, saat debugging, sebaiknya jangan gunakan cache.
+    # Setelah yakin model sudah benar, Anda bisa menambahkan @st.cache_resource lagi.
+    
     model_pipeline = None
     label_encoder = None
     
@@ -24,25 +30,110 @@ def load_assets():
         
     return model_pipeline, label_encoder
 
-# Muat aset model
-model_pipeline, label_encoder = load_assets()
+# --- 3. Fungsi Memuat dan Memproses Data Mentah (Untuk TMI) ---
+def extract_animal(dosis_text):
+    """Mengekstrak jenis hewan dari string Dosis (sama seperti di Cell 1 notebook)."""
+    text = str(dosis_text).lower()
+    if re.search(r'sapi', text):
+        return 'Sapi'
+    elif re.search(r'kambing', text):
+        return 'Kambing'
+    elif re.search(r'kucing', text):
+        return 'Kucing'
+    elif re.search(r'anjing', text):
+        return 'Anjing'
+    else:
+        return 'Lainnya'
 
-# --- 3. Fungsi Utama Aplikasi Streamlit ---
+# @st.cache_data
+def load_raw_data():
+    """Memuat dan membersihkan data untuk Analisis TMI."""
+    try:
+        # Ganti dengan nama file CSV Anda
+        df_obat_2022 = pd.read_csv('LAPORAN PENGOBATAN 2022.csv', sep=';')
+        df_obat_2023 = pd.read_csv('LAPORAN PENGOBATAN 2023.csv', sep=';')
+        df_obat_2024 = pd.read_csv('LAPORAN PENGOBATAN 2024.csv', sep=';')
+        df_obat_2025 = pd.read_csv('LAPORAN PENGOBATAN 2025.csv', sep=';')
+        df_kasus = pd.concat([df_obat_2022, df_obat_2023, df_obat_2024, df_obat_2025], ignore_index=True)
+        
+        # Pra-pemrosesan (Wajib sama seperti di notebook Cell 1)
+        df_kasus['Tanda/Sindrom'] = df_kasus['Tanda/Sindrom'].fillna('')
+        df_kasus['Dosis'] = df_kasus['Dosis'].fillna('')
+        df_kasus[ANIMAL_COL] = df_kasus['Dosis'].apply(extract_animal)
+        
+        # Pembersihan Target Y
+        df_kasus.dropna(subset=[Y_COL], inplace=True)
+        df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != 'tidak sakit']
+        df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != '']
+        
+        return df_kasus
+        
+    except FileNotFoundError:
+        return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Gagal memuat atau memproses data mentah: {e}")
+        return pd.DataFrame()
+
+# --- 4. Fungsi Menampilkan TMI (Insights) ---
+def display_tmi(df):
+    
+    st.markdown("<h2 style='text-align: center;'>--- 📊 Analisis Data Cepat (TMI) ---</h2>", unsafe_allow_html=True)
+    
+    if df.empty:
+        st.info("File data CSV tidak ditemukan di folder utama (root). Analisis tidak dapat ditampilkan.")
+        return
+        
+    # --- Row 1: Metrik Utama ---
+    col1, col2, col3 = st.columns(3)
+    
+    col1.metric("Total Sampel Data", f"{len(df):,}")
+    
+    num_diagnoses = df[Y_COL].nunique()
+    col2.metric("Jumlah Total Diagnosis Unik", f"{num_diagnoses}")
+
+    # Asumsi kolom 'tanggal_kasus' ada di data Anda
+    try:
+        df['Tahun'] = df['tanggal_kasus'].astype(str).str[:4]
+        num_years = df['Tahun'].nunique()
+        col3.metric("Jangkauan Tahun Data", f"{num_years} Tahun")
+    except KeyError:
+        col3.metric("Jangkauan Tahun Data", "N/A (Kolom tanggal_kasus tidak ditemukan)")
+
+
+    st.markdown("---")
+
+    # --- Row 2: Distribusi Topik ---
+    col4, col5 = st.columns(2)
+
+    # 1. Diagnosis Paling Sering
+    top_diagnosis = df[Y_COL].value_counts().head(5)
+    with col4:
+        st.subheader("Top 5 Diagnosis Terbanyak")
+        # Mengganti index menjadi kolom untuk tampilan yang lebih baik
+        top_diagnosis_df = top_diagnosis.reset_index()
+        top_diagnosis_df.columns = ['Diagnosis', 'Jumlah Kasus']
+        st.dataframe(top_diagnosis_df, use_container_width=True, hide_index=True)
+
+    # 2. Distribusi Jenis Hewan
+    animal_counts = df[ANIMAL_COL].value_counts()
+    with col5:
+        st.subheader("Distribusi Jenis Hewan")
+        st.bar_chart(animal_counts) # 
+
+# Muat aset model dan data
+model_pipeline, label_encoder = load_assets()
+RAW_DF = load_raw_data()
+
+# --- 5. Fungsi Utama Aplikasi Streamlit ---
 def main():
     st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="centered")
 
-    st.title("Diagnosa Penyakit Hewan melalui Gejala")
+    st.title("Vet Diagnosa AI: Klasifikasi Penyakit Hewan")
     st.markdown("""
-        Masukkan ciri-ciri kasus (gejala) dan jenis hewan untuk mendapatkan prediksi diagnosis dari model Klasifikasi NLP.
+        **Tool Prediksi Diagnosis** menggunakan model *Machine Learning* yang dilatih dari data kasus dan gejala klinis.
     """)
     st.markdown("---")
     
-    # --- Konstanta Hewan ---
-    ANIMAL_COL = 'Jenis_Hewan_Dominan' # Harus sama persis dengan nama kolom di notebook Cell 5!
-    
-    # Daftar Jenis Hewan yang diekstrak (Harus sesuai dengan yang ditemukan di Cell 1 notebook)
-    animal_list = ['Sapi', 'Kambing', 'Kucing', 'Anjing', 'Lainnya'] 
-
     # --- Input Teks dari User ---
     input_text = st.text_area(
         "**1. Masukkan Ciri-ciri Kasus (Gejala)**", 
@@ -50,7 +141,9 @@ def main():
         height=150
     )
 
-    # --- Input Jenis Hewan (BARU) ---
+    # --- Input Jenis Hewan ---
+    # Daftar Jenis Hewan yang diekstrak (Harus sesuai dengan yang ditemukan di Cell 1 notebook)
+    animal_list = ['Sapi', 'Kambing', 'Kucing', 'Anjing', 'Lainnya'] 
     input_animal = st.selectbox(
         f"**2. Pilih Jenis Hewan**",
         options=animal_list
@@ -70,10 +163,9 @@ def main():
             with st.spinner('Model sedang memproses...'):
                 
                 # 1. Konversi input ke DataFrame DUA KOLOM
-                # Ini adalah format input yang dibutuhkan oleh ColumnTransformer Anda.
                 input_df = pd.DataFrame({
                     'ciri_kasus': [input_text], 
-                    ANIMAL_COL: [input_animal] # Menambahkan kolom Jenis Hewan
+                    ANIMAL_COL: [input_animal] 
                 })
                 
                 # 2. Prediksi
@@ -93,8 +185,10 @@ def main():
             st.error(f"Gagal saat prediksi.")
             st.code(f"Error detail: {e}") 
 
+    # --- TAMPILAN TMI (INSIGHTS) ---
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    display_tmi(RAW_DF)
+
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
-
-
