@@ -29,16 +29,16 @@ model_pipeline, label_encoder = load_assets()
 
 # --- 3. Fungsi Utama Aplikasi Streamlit ---
 def main():
-    st.set_page_config(page_title="Diagnosa AI", layout="centered")
+    st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="centered")
 
-    st.title("Diagnosa AI: Klasifikasi Teks Kasus (Project 3)")
+    st.title("Diagnosa Penyakit Hewan melalui Gejala")
     st.markdown("""
         Masukkan ciri-ciri kasus (gejala) dan jenis hewan untuk mendapatkan prediksi diagnosis dari model Klasifikasi NLP.
     """)
     st.markdown("---")
     
     # --- Konstanta Hewan ---
-    ANIMAL_COL = 'Jenis_Hewan_Dominan' # Harus sama persis dengan nama kolom di notebook Cell 5!
+    ANIMAL_COL = 'Jenis Hewan' # Harus sama persis dengan nama kolom di notebook Cell 5!
     
     # Daftar Jenis Hewan yang diekstrak (Harus sesuai dengan yang ditemukan di Cell 1 notebook)
     animal_list = ['Sapi', 'Kambing', 'Kucing', 'Anjing', 'Lainnya'] 
@@ -90,9 +90,10 @@ def main():
             st.info("Prediksi ini adalah output Machine Learning dan harus dikonfirmasi oleh profesional yang kompeten.")
 
         except Exception as e:
-            st.error(f"Gagal saat prediksi. Pastikan Anda sudah mengupload model .pkl terbaru yang dilatih dengan 2 fitur (Teks + Hewan).")
+            st.error(f"Gagal saat prediksi.")
             st.code(f"Error detail: {e}") 
 
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
