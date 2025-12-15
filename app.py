@@ -161,7 +161,7 @@ def display_tmi(df):
     top_5_diseases = df[Y_COL].value_counts().head(5).index.tolist()
     
     # 2. Hitung jumlah kasus per tahun untuk 5 penyakit teratas tersebut
-    df_trend = df[df[Y_COL].isin(top_5_diseases)].groupby(['Tahun', Y_COL]).size().reset_index(name='Jumlah Kasus')
+    df_trend = df[df[Y_COL].isin(top_5_diseases)].groupby(['Tahun_Bulan', Y_COL]).size().reset_index(name='Jumlah Kasus')
     
     # 3. Pivot data untuk Streamlit (Tahun sebagai Index, Diagnosis sebagai Kolom)
     df_pivot = df_trend.pivot_table(index='Tahun', columns=Y_COL, values='Jumlah Kasus', fill_value=0)
@@ -248,6 +248,7 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
 
 
 
