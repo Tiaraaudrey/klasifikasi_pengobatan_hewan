@@ -38,7 +38,7 @@ def main():
     st.markdown("---")
     
     # --- Konstanta Hewan ---
-    ANIMAL_COL = 'Jenis Hewan' # Harus sama persis dengan nama kolom di notebook Cell 5!
+    ANIMAL_COL = 'Jenis_Hewan_Dominan' # Harus sama persis dengan nama kolom di notebook Cell 5!
     
     # Daftar Jenis Hewan yang diekstrak (Harus sesuai dengan yang ditemukan di Cell 1 notebook)
     animal_list = ['Sapi', 'Kambing', 'Kucing', 'Anjing', 'Lainnya'] 
@@ -52,7 +52,7 @@ def main():
 
     # --- Input Jenis Hewan (BARU) ---
     input_animal = st.selectbox(
-        f"**2. Pilih Jenis Hewan ({ANIMAL_COL})**",
+        f"**2. Pilih Jenis Hewan**",
         options=animal_list
     )
 
@@ -96,4 +96,5 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
 
