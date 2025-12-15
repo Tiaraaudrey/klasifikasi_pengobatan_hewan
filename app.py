@@ -168,7 +168,7 @@ def display_tmi_tren(df):
     
 # --- 5. Fungsi Utama Aplikasi Streamlit (Main) ---
 def main(model_pipeline, label_encoder, raw_df): 
-    st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="centered")
+    st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="wide")
 
     st.title("Vet Diagnosa AI: Klasifikasi Penyakit Hewan")
     st.markdown("---")
@@ -255,6 +255,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
