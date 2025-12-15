@@ -169,7 +169,7 @@ def display_tmi_tren(df):
 def main(model_pipeline, label_encoder, raw_df): 
     st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="wide")
 
-    st.title("Vet Diagnosa AI: Klasifikasi Penyakit Hewan")
+    st.title("Diagnosa AI: Klasifikasi Penyakit Hewan")
     st.markdown("---")
 
     # --- MEMBUAT DUA KOLOM UTAMA (RASIO 3:2) ---
@@ -178,7 +178,7 @@ def main(model_pipeline, label_encoder, raw_df):
     # -----------------------------------------------------
     # --- KOLOM KIRI: FORMULIR PREDIKSI ---
     with col_prediksi:
-        st.header("Diagnosis Gejala (Model AI)")
+        st.header("Diagnosis Gejala Penyakit Hewan")
         st.markdown("""
             **Tool Prediksi Diagnosis** menggunakan model *Machine Learning* yang dilatih dari data kasus dan gejala klinis.
         """)
@@ -190,7 +190,7 @@ def main(model_pipeline, label_encoder, raw_df):
         # --- Input Teks dari User ---
         input_text = st.text_area(
             "**1. Masukkan Ciri-ciri Kasus (Gejala)**", 
-            placeholder="Contoh: Demam, batuk, leleran hidung, dan ada pembengkakan pada kelenjar getah bening.",
+            placeholder="Contoh: Demam, batuk, leleran hidung.",
             height=150
         )
 
@@ -254,6 +254,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
