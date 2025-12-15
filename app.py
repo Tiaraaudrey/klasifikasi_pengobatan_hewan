@@ -65,6 +65,29 @@ def load_raw_data():
         df_kasus.dropna(subset=[Y_COL], inplace=True)
         df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != 'tidak sakit']
         df_kasus = df_kasus[df_kasus[Y_COL].str.lower() != '']
+
+        # --- FIX KRUSIAL: Konversi Kolom Tanggal dan Ekstraksi Tahun ---
+        TANGGAL_COL = 'tanggal_kasus' # Gunakan kolom ini sesuai output notebook
+        
+        if TANGGAL_COL in df_kasus.columns:
+            # Mengubah kolom tanggal menjadi datetime, error='coerce' akan mengubah yang gagal menjadi NaT
+            df_kasus[TANGGAL_COL] = pd.to_datetime(df_kasus[TANGGAL_COL], errors='coerce')
+            
+            # Ekstrak Tahun dari tanggal
+            df_kasus['Tahun'] = df_kasus[TANGGAL_COL].dt.year.astype('Int64', errors='ignore').astype(str)
+            
+            # Hapus baris yang tahunnya tidak valid setelah konversi
+            df_kasus = df_kasus[df_kasus['Tahun'] != '<NA>'].copy()
+        else:
+            # Jika kolom tanggal_kasus tidak ada
+            st.warning(f"Kolom '{TANGGAL_COL}' tidak ditemukan di data mentah. Tren Tahunan tidak akan muncul.")
+            df_kasus['Tahun'] = 'N/A' # Tambahkan kolom dummy
+            
+        # --- FILTERING KELAS MINORITAS (Sama seperti di notebook) ---
+        min_class_count = 5 
+        value_counts = df_kasus[Y_COL].value_counts()
+        valid_classes = value_counts[value_counts >= min_class_count].index
+        df_kasus = df_kasus[df_kasus[Y_COL].isin(valid_classes)].reset_index(drop=True).copy()
         
         return df_kasus
         
@@ -219,4 +242,5 @@ def main():
 # Jalankan Aplikasi
 if __name__ == "__main__":
     main()
+
 
