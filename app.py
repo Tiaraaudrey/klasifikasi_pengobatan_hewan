@@ -107,7 +107,7 @@ def display_insight(df):
     
     # Top 5 Diagnosis 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("**Top 5 Diagnosis (Ekor)**")
+    st.markdown("**Top 5 Diagnosis Penyakit Hewan**")
     
     top_diagnosis = df.groupby(Y_COL)['Jumlah Kasus'].sum().sort_values(ascending=False).head(5)
     top_diagnosis_df = top_diagnosis.reset_index()
@@ -208,6 +208,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
