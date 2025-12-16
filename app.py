@@ -100,9 +100,7 @@ def load_raw_data():
 # 4. Fungsi Menampilkan Insight (Di Samping) 
 def display_insight(df):
     
-    st.markdown("###### 📊 Kilas Insight Data Pengobatan Hewan")
-    st.markdown("___")
-    
+    st.markdown("#### 📊 Kilas Insight Data Pengobatan Hewan")
     if df.empty:
         st.info("Data tidak tersedia.")
         return
@@ -117,7 +115,7 @@ def display_insight(df):
     st.dataframe(top_diagnosis_df, use_container_width=True, hide_index=True)
 
     # TREN Penyakit tiap bulan
-    st.markdown("###### 📈 Tren Penyakit dari Bulan ke Bulan")
+    st.markdown("**📈 Tren Penyakit dari Bulan ke Bulan**")
     st.markdown("---")
     
     if df.empty or 'Tahun_Bulan' not in df.columns or (df['Tahun_Bulan'] == 'N/A').all():
@@ -146,7 +144,7 @@ def main(model_pipeline, label_encoder, raw_df):
     col_prediksi, col_insight = st.columns([3, 2]) 
     #kiri
     with col_prediksi:
-        st.header("Diagnosis Gejala Penyakit Hewan")
+        st.markdown("####Diagnosis Gejala Penyakit Hewan")
         st.markdown("""
             **Tool Prediksi Diagnosis** menggunakan model *Machine Learning* yang dilatih dari data kasus dan gejala klinis.
         """)
@@ -210,6 +208,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
