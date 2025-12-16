@@ -21,7 +21,6 @@ def load_assets():
     try:
         model_pipeline = joblib.load(MODEL_PATH)
         label_encoder = joblib.load(LABEL_ENCODER_PATH)
-        st.success("Aset model (Pipeline dan Encoder) berhasil dimuat.")
     except Exception as e:
         st.error(f"FATAL ERROR: Gagal memuat aset model. Pastikan file {MODEL_PATH} dan {LABEL_ENCODER_PATH} ada.")
         st.code(f"Error detail: {e}")
@@ -208,6 +207,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
