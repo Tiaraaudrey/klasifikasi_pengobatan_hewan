@@ -144,7 +144,7 @@ def main(model_pipeline, label_encoder, raw_df):
     col_prediksi, col_insight = st.columns([3, 2]) 
     #kiri
     with col_prediksi:
-        st.markdown("####Diagnosis Gejala Penyakit Hewan")
+        st.markdown("#####**Diagnosis Gejala Penyakit Hewan**")
         st.markdown("""
             **Tool Prediksi Diagnosis** menggunakan model *Machine Learning* yang dilatih dari data kasus dan gejala klinis.
         """)
@@ -208,6 +208,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
