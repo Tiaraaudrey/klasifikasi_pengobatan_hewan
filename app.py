@@ -100,6 +100,7 @@ def load_raw_data():
 def display_insight(df):
     
     st.markdown("#### 📊 Kilas Insight Data Pengobatan Hewan")
+    st.markdown("___")
     if df.empty:
         st.info("Data tidak tersedia.")
         return
@@ -137,7 +138,7 @@ def main(model_pipeline, label_encoder, raw_df):
     st.set_page_config(page_title="Prediksi Penyakit Hewan", layout="wide")
 
     st.title("Diagnosa AI: Klasifikasi Penyakit Hewan")
-    st.markdown("---")
+    st.markdown("___")
 
     col_prediksi, col_insight = st.columns([3, 2]) 
     #kiri
@@ -206,6 +207,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
