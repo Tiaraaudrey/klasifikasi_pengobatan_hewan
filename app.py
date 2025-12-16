@@ -54,7 +54,7 @@ def extract_animal(dosis_text):
         return 'Lainnya'
 
 def load_raw_data():
-    """Memuat dan membersihkan data untuk Analisis TMI."""
+    """Memuat dan membersihkan data untuk Insight."""
     try:
         df_obat_2022 = pd.read_csv('LAPORAN PENGOBATAN 2022.csv', sep=';')
         df_obat_2023 = pd.read_csv('LAPORAN PENGOBATAN 2023.csv', sep=';')
@@ -143,7 +143,7 @@ def main(model_pipeline, label_encoder, raw_df):
     st.title("Diagnosa AI: Klasifikasi Penyakit Hewan")
     st.markdown("---")
 
-    col_prediksi, col_tmi_highlight = st.columns([3, 2]) 
+    col_prediksi, col_insight = st.columns([3, 2]) 
     #kiri
     with col_prediksi:
         st.header("Diagnosis Gejala Penyakit Hewan")
@@ -210,6 +210,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
