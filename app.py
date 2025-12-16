@@ -115,7 +115,6 @@ def display_insight(df):
 
     # TREN Penyakit tiap bulan
     st.markdown("**Tren Penyakit dari Bulan ke Bulan**")
-    st.markdown("---")
     
     if df.empty or 'Tahun_Bulan' not in df.columns or (df['Tahun_Bulan'] == 'N/A').all():
         st.info("Tren penyakit per bulan tidak dapat ditampilkan karena data tanggal tidak tersedia atau tidak valid.")
@@ -207,6 +206,7 @@ if __name__ == "__main__":
     model_pipeline, label_encoder = load_assets()
     raw_df = load_raw_data()
     main(model_pipeline, label_encoder, raw_df)
+
 
 
 
